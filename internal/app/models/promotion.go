@@ -6,7 +6,7 @@ import (
 	"gorm.io/gorm"
 )
 
-type Promotion struct{
+type Promotion struct {
 	gorm.Model
 	ID uint `gorm:"primarykey"`
 	PromotionID string `gorm:"column:promotion_id" json:"promotion_id`
@@ -15,9 +15,9 @@ type Promotion struct{
 	DiscountValue float64 `gorm:"not null" json:"discount_value"`
 	PromotionStartDate time.Time `gorm:"not null" json:"promotion_start_date"`
 	PromotionEndDate time.Time `gorm:"not null" json:"promotion_end_date"`
-	CreateAt time.Time `gorm:"autoCreatedTime"`
-	UpdateAt time.Time `gorm:"autoUpdateTime:mili"`
-	DeleteAt gorm.DeletedAt `gorm:"index"`
+	CreatedAt time.Time `gorm:"autoCreatedTime"`
+	UpdatedAt time.Time `gorm:"autoUpdateTime:mili"`
+	DeletedAt gorm.DeletedAt `gorm:"index"`
 }
 
 func (Promotion) TableName() string{
