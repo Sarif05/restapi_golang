@@ -8,6 +8,7 @@ import (
 	"gorm.io/gorm"
 )
 
+
 func InitDatabase() *gorm.DB{
 	dbUser := viper.GetString("DATABASE.USER")
 	dbPass := viper.GetString("DATABASE.PASS")

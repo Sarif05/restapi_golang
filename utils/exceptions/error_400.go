@@ -2,7 +2,7 @@ package exceptions
 
 import "fmt"
 
-type NotFoundError struct {
+type NotFoundErr struct {
 	Message string
 	ID      uint
 }
@@ -12,7 +12,7 @@ type PromotionIDNotFoundError struct {
 	PromotionID string
 }
 
-func (e *NotFoundError) Error() string {
+func (e *NotFoundErr) Error() string {
 	return fmt.Sprintf("%s with ID %d", e.Message, e.ID)
 }
 

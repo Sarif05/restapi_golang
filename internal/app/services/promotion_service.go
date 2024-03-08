@@ -1,15 +1,14 @@
 package services
 
 import (
-	"final_project_promotion/internal/app/models"
+	"final_project_promotion/internal/app/models/web"
 )
 
 type PromotionService interface{
-	CreatePromotion(promo models.Promotion) (models.Promotion, error)
-	GetAllPromotions(limit, offset int) ([]models.Promotion, error)
-	SearchPromotions(query string, limit, offset int) ([]models.Promotion, error)
-	GetPromotionbyPromotionID(promotionID string) (models.Promotion, error)
-	UpdatePromotionbyPromotionID(promo models.Promotion) (models.Promotion, error)
+	CreatePromotion(request web.PromotionCreateRequest) (web.PromotionResponse, error)
+	GetAllPromotions(limit, offset int) ([]web.PromotionResponse, error)
+	SearchPromotions(query string, limit, offset int) ([]web.PromotionResponse, error)
+	GetPromotionbyPromotionID(promotionID string) (web.PromotionResponse, error)
+	UpdatePromotionbyPromotionID(request web.PromotionUpdateRequest) (web.PromotionResponse, error)
 	DeletePromotionbyPromotionID(promotionID string) error
 }
-

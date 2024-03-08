@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"final_project_promotion/internal/app/models"
+	"final_project_promotion/internal/app/models/web"
 	"final_project_promotion/internal/app/services"
 	"final_project_promotion/utils/exceptions"
 	"net/http"
@@ -10,34 +10,26 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func PSQLCreatePromotionData(PromoService services.PromotionService) echo.HandlerFunc {
-	// Implementasi kamu taruh disini
-	return func (c echo.Context) error {
-		var promo models.Promotion
-		if err := c.Bind(&promo); err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, "Invalid Promotion Data")
+func PSQLCreatePromotionData(s services.PromotionService) func(c echo.Context) error {
+    return func(c echo.Context) error {
+        promoCreate := web.PromotionCreateRequest{}
+        if err := c.Bind(&promoCreate); err != nil {
+            return echo.NewHTTPError(http.StatusBadRequest, "Invalid Promotion Data")
+        }
+        createdPromo, err := s.CreatePromotion(promoCreate)
+        if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, "Failed to create promotion")
 		}
-
-		createdPromo, err := PromoService.CreatePromotion(promo)
-		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, "Failde to create promotion")
-		}
-		return c.JSON(http.StatusCreated, createdPromo)
-	}
+        webResponse := web.WebResponse{
+            Code:   http.StatusOK,
+            Status: "OK",
+            Data:   createdPromo,
+        }
+        return c.JSON(http.StatusOK, webResponse)
+    }
 }
 
-// func PSQLGetAllPromotionData(PromoService services.PromotionService) echo.HandlerFunc {
-// 	// Implementasi kamu taruh disini
-// 	return func(c echo.Context) error {
-// 		promotions, err := PromoService.GetAllPromotions()
-// 		if err != nil {
-// 			return echo.NewHTTPError(http.StatusInternalServerError, "Failed to retrieve promotions: " + err.Error())
-// 		}
-// 		return c.JSON(http.StatusOK, promotions)
-// 	}
-// }
-
-func PSQLSearchPromotions(PromoService services.PromotionService) echo.HandlerFunc {
+func PSQLSearchPromotions(s services.PromotionService) func(c echo.Context) error {
     return func(c echo.Context) error {
         query := c.QueryParam("query")
         limitParam := c.QueryParam("limit")
@@ -61,16 +53,20 @@ func PSQLSearchPromotions(PromoService services.PromotionService) echo.HandlerFu
             page = 1
         }
         offset := (page - 1) * limit
-
-        promotions, err := PromoService.SearchPromotions(query, limit, offset)
+        searchPromo, err := s.SearchPromotions(query, limit, offset)
         if err != nil {
-            return echo.NewHTTPError(http.StatusInternalServerError, "Failed to search promotions: "+err.Error())
+			return echo.NewHTTPError(http.StatusInternalServerError, "Failed to create promotion")
+		}
+        webResponse := web.WebResponse{
+            Code:   http.StatusOK,
+            Status: "OK",
+            Data:   searchPromo,
         }
-        return c.JSON(http.StatusOK, promotions)
+        return c.JSON(http.StatusOK, webResponse)
     }
 }
 
-func PSQLGetAllPromotionData(PromoService services.PromotionService) echo.HandlerFunc {
+func PSQLGetAllPromotionData(s services.PromotionService) func(c echo.Context) error {
     return func(c echo.Context) error {
         // Mendapatkan parameter opsional dari query string
         limitParam := c.QueryParam("limit")
@@ -97,55 +93,76 @@ func PSQLGetAllPromotionData(PromoService services.PromotionService) echo.Handle
             page = 1
         }
         offset := (page - 1) * limit
-        promotions, err := PromoService.GetAllPromotions(limit, offset)
+        getAll, err := s.GetAllPromotions(limit, offset)
         if err != nil {
-            return echo.NewHTTPError(http.StatusInternalServerError, "Failed to retrieve promotions: "+err.Error())
+			return echo.NewHTTPError(http.StatusInternalServerError, "Failed to create promotion")
+		}
+        webResponse := web.WebResponse{
+            Code:   http.StatusOK,
+            Status: "OK",
+            Data:   getAll,
         }
-        return c.JSON(http.StatusOK, promotions)
+        return c.JSON(http.StatusOK, webResponse)
     }
 }
 
-func PSQLGetPromotionbyPromotionID(PromoService services.PromotionService) echo.HandlerFunc {
-	// Implementasi kamu taruh disini
+func PSQLGetPromotionbyPromotionID(s services.PromotionService) func(c echo.Context) error {
+	// Implementasi kamu taruh disinildm
 	return func(c echo.Context) error {
 		promotionID := c.Param("promotion_id")
 
-		promo, err := PromoService.GetPromotionbyPromotionID(promotionID)
-		if err != nil {
-
+		getById, err := s.GetPromotionbyPromotionID(promotionID)
+        if err != nil {
 			// ! Update the exception with the custom one. For now leave it there.
 			if e, ok := err.(*exceptions.PromotionIDNotFoundError); ok {
 				return echo.NewHTTPError(http.StatusNotFound, e.Error())
 			}
 			return echo.NewHTTPError(http.StatusInternalServerError, "Failed to get promotion")
 		}
-
-		return c.JSON(http.StatusOK, promo)
+        webResponse := web.WebResponse{
+            Code:   http.StatusOK,
+            Status: "OK",
+            Data:   getById,
+        }
+		return c.JSON(http.StatusOK, webResponse)
 	}
 }
 
-func PSQLUpdatePromotionbyPromotionID(PromoService services.PromotionService) echo.HandlerFunc {
-	// Implementasi kamu taruh disini
-	return func(c echo.Context) error {
-		promotionID := c.Param("promotion_id")
-
-		promo, err := PromoService.GetPromotionbyPromotionID(promotionID)
-		if err != nil{
-			if e, ok := err.(*exceptions.PromotionIDNotFoundError); ok{
+func PSQLUpdatePromotionbyPromotionID(PromoService services.PromotionService) func(c echo.Context) error {
+    return func(c echo.Context) error {
+        promotionID := c.Param("promotion_id")
+        promoResponse, err := PromoService.GetPromotionbyPromotionID(promotionID)
+        if err != nil {
+			if e, ok := err.(*exceptions.PromotionIDNotFoundError); ok {
 				return echo.NewHTTPError(http.StatusNotFound, e.Error())
 			}
-			return echo.NewHTTPError(http.StatusInternalServerError, "Failde To Get Promotion")
+			return echo.NewHTTPError(http.StatusInternalServerError, "Failed to get promotion")
 		}
 
-		if err := c.Bind(&promo); err != nil{
-			return echo.NewHTTPError(http.StatusBadRequest, "Invalid Promotion Data")
+        if err := c.Bind(&promoResponse); err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, "Invalid promotion data")
 		}
-		updatePromo, err := PromoService.UpdatePromotionbyPromotionID(promo)
-		if err != nil{
-			return echo.NewHTTPError(http.StatusInternalServerError, "Failde To Update Promotion")
+
+        // Bind data promosi yang diperbarui dari request
+        updateRequest := web.PromotionUpdateRequest{}
+        if err := c.Bind(&updateRequest); err != nil {
+            return echo.NewHTTPError(http.StatusBadRequest, "Invalid Promotion Data")
+        }
+        // Set PromotionID dari updateRequest dengan nilai dari promoResponse
+        updateRequest.PromotionID = promoResponse.PromotionID
+        updatePromo, err := PromoService.UpdatePromotionbyPromotionID(updateRequest)
+        if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, "Failed to update promotion")
 		}
-		return c.JSON(http.StatusOK, updatePromo)
-	}
+
+        // Buat respons sukses
+        webResponse := web.WebResponse{
+            Code:   http.StatusOK,
+            Status: "OK",
+            Data:   updatePromo,
+        }
+        return c.JSON(http.StatusOK, webResponse)
+    }
 }
 
 func PSQLDeletePromotionbyPromotionID(PromoService services.PromotionService) echo.HandlerFunc {
@@ -154,7 +171,7 @@ func PSQLDeletePromotionbyPromotionID(PromoService services.PromotionService) ec
 		promotionID := c.Param("promotion_id")
 
 		if err := PromoService.DeletePromotionbyPromotionID(promotionID); err != nil {
-			if e, ok := err.(*exceptions.NotFoundError); ok {
+			if e, ok := err.(*exceptions.NotFoundErr); ok {
 				return echo.NewHTTPError(http.StatusNotFound, e.Error())
 			}
 			return echo.NewHTTPError(http.StatusInternalServerError, "Failed to delete promotion")
